@@ -356,3 +356,40 @@ Get-WmiObject win32_operatingSystem -ComputerName dc2016 | fl *
 
 Get-WmiObject win32_operatingSystem -ComputerName $computers.name |fl pscomputername, caption
 
+Get-WmiObject win32_operatingSystem -ComputerName $computers.name -ErrorAction SilentlyContinue | fl pscomputername, caption
+
+gwmi -Query "Select * from win32_operatingSystem" -ComputerName $computer.name -ErrorAction SilentlyContinue | fl pscomputername,caption
+
+gwmi -Query "Select * from win32_operatingSystem where caption like '%Windows 10%'" -ComputerName $computer.name -ErrorAction `
+SilentlyContinue | fl pscomputername,caption
+
+Get-CimInstance Win32_ComputerSystem -ComputerName $computers.name -ErrorAction SilentlyContinue | fl name, username
+
+###POWERSHELL REMOTING
+
+#Check if Remote is available
+
+Get-PSSessionConfiguration
+
+Enable-PSRemoting -Force
+
+Invoke-Command -ComputerName $computers -ScriptBlock {Start-service Spooler}
+
+
+###JOBs in PowerShell
+
+Start-Job -ScriptBlock {Get-ADObject -Filter * -Property *}
+
+Get-Job -Name Job1
+
+##Getting ChildJob
+
+Get-Job -Name Job1 -IncludeChildJob
+
+#Getting Results of the Job
+
+Receive-Job 1 # If you run this cmd-let one time than it is going to be deleted from the PS Cache
+
+#If you dont want the PS to delete the cache then:
+
+Receive-Job 1 -Keep
