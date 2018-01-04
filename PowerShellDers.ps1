@@ -393,3 +393,9 @@ Receive-Job 1 # If you run this cmd-let one time than it is going to be deleted 
 #If you dont want the PS to delete the cache then:
 
 Receive-Job 1 -Keep
+
+#WMI Jobs
+
+Get-WmiObject win32_share -ComputerName dc2016, srv2016 -AsJob
+
+Receive-Job Job3 -Keep
