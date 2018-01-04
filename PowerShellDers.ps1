@@ -208,3 +208,151 @@ function Sum {
     return $result
 }
 Sum
+
+
+##Active Directory
+
+New-ADUser -GivenName Huseyin -Surname Akar -Name "Huseyin AKAR" -DisplayName "Huseyin AKAR" `
+-SamAccountName h.akar -UserPrincipalName h.akar@hfakar.local -AccountPassword `
+(ConvertTo-SecureString -asplaintext "P@ssw0rd" -Force) -ChangePasswordAtLogon $true -Enabled `
+$true -Path "ou=istanbulUsers, ou=istanbulOU, ou=organizations, dc=hfakar, dc=local"
+
+#Csv importing 
+
+Import-Csv C:\hfakar.csv -Delimiter "," |
+foreach{
+New-ADUser -GivenName $_.FirstName -Surname $_.LastName -Name $_.FullName -DisplayName $_.FullName `
+-SamAccountName $_.SAM2 -UserPrincipalName $_.UPN -AccountPassword `
+(ConvertTo-SecureString -asplaintext "P@ssw0rd" -Force) -ChangePasswordAtLogon $true -Enabled `
+$true -Path "ou=istanbulUsers, ou=istanbulOU, ou=organizations, dc=hfakar, dc=local"
+}
+
+Import-module ActiveDirectory
+
+Get-ADUser -Filter *
+
+Get-ADUser -Filter * | ft name,userpriciplename
+
+Get-ADUser -Filter {name -like "ahmet sait*"}
+
+Get-ADUser -Filter {name -like "ahmet sait*"} -Properties *
+
+Get-ADUser -Filter {name -like "ahmet sait*"} -Properties whencreated # adding whencreated to default properties
+
+Get-ADOrganizationalUnit -Filter {name -like "ist*"}
+
+Get-ADUser -Filter * -Searchbase "Distinguished name comes here"
+
+#gettin user only from a single ou directory not recursive
+
+Get-ADUser -Filter * -Searchbase "Distinguished name comes here" -SearchScope OneLevel 
+
+$startDate=Get-Date "1/4/2018 11:15:00 AM"
+
+$startDate
+
+$endDate=Get-date "1/5/2018 11:15:00 AM"
+
+$endDate
+
+Get-ADUser -Filter{whencreated -gt $startdate -and whenCreated -lt $endDate} |ft name
+
+
+Get-ADUser -Filter{whencreated -gt $startdate -and whenCreated -lt $endDate} | Move-ADObject -TargetPath "ou=ankarausers, ou=ankaraou, dc=hfakar"
+
+Update-Help -Module ActiveDirectory
+
+Get-ADUser -Filter * -SearchBase "ou=ankaraou,ou=organizations, dc=druan,dc=local" | Set-ADUser -Description "Engineer" -City "Ankara"
+
+
+#Reading from a file and looping through it
+
+$users =Import-Csv C:\hfakar.csv
+
+foreach ($user in $users)
+{
+    $emp = $user.EmployeeID
+    $desc = $user.Description
+    $phone = $user.phone
+    $getUser = Get-ADUser -Filter {employeeid- eq $emp}
+    Set-ADUser $getUser -Description $desc -OfficePhone $phone
+}
+
+#AD Group Creation
+New-ADGroup -Name Engineers -GroupCategory Security -GroupScope Global -Path `
+"ou=ankarausers, ou=ankaraOU, ou=organizations, dc=duran,dc=local"
+
+Get-ADGroup -Filter {name -eq "engineers"}
+
+Add-ADGroupMember engineers  -Members $users #Adding to a group
+
+Get-ADGroupMember Engineers 
+
+Get-ADGroupMember Engineers -Recursive | select name
+
+
+#adding a computer to a domain
+
+Add-Computer -DomainName hfakar.local -OUPath "ou=ankarausers, ou=ankaraOU, ou=organizations, dc=duran,dc=local" `
+-Credential (Get-Credential)
+
+
+#Qeuerying Computer on AD
+
+Get-ADComputer -Filter * 
+
+Get-ADObject   #Querying everything, not just users or computers
+
+Get-ADObject -Filter {objectclass -eq "user" -or objectclass -eq "computer"} -SearchBase `
+"ou=ankarausers, ou=ankaraOU, ou=organizations, dc=duran,dc=local" | ft name, objectclass
+
+Get-Command -Module ActiveDirectory
+
+
+
+#########################
+
+#WMI and CIM
+
+#########################
+
+#CIM is newer than WMI
+#Can be used in linux
+#WMI is well known
+
+#group policy operations utilizes the WMI
+
+#WMI filtering usez WQN (WMI QUERY LANGUAGE)
+
+#Select * From WMI_CLASS WHERE WMI_PROPERTY=value
+
+Select * from Win32_OperatingSystem where (Caption like "%Windows 10%")
+
+Get-CimInstance -Class Win32_Share
+
+Get-WmiObject -Class win32_share
+
+#Difference is on the connectiuon when the comman is run
+
+#Finding WMI Classes:
+#Online 
+#live.sysinternals.com Download Bginfo from there
+
+#Can be distributed with Group Policy
+
+#custom --> Wmi Query --> Browse
+
+#Then You will see the WMI classes and properties on there
+
+Get-WmiObject -Class win32_share -ComputerName #if it is remote than firewall settings need to be changed first#
+
+# there are 3 main firewall rules that WMI requires
+
+#Control Panel Windows Management Instrumantation and the Domain Rules need to be allowed on Windwos Firewall
+
+Get-WmiObject win32_operatingSystem -ComputerName dc2016
+
+Get-WmiObject win32_operatingSystem -ComputerName dc2016 | fl *
+
+Get-WmiObject win32_operatingSystem -ComputerName $computers.name |fl pscomputername, caption
+
